@@ -1,0 +1,48 @@
+services:
+  chatbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dericsolen/rag_bible:1.0
+    container_name: rag_chat
+    ports:
+      - "5000:8501"
+    volumes:
+      - ./apps:/apps/apps
+      - ./data:/apps/data:rw
+      - ./.streamlit:/apps/.streamlit
+      - ./.env:/apps/.env
+      
+    stdin_open: true
+    tty: true
+
+    develop:
+      # Create a `watch` configuration to update the appl
+      # https://docs.docker.com/compose/file-watch/#compose-watch-versus-bind-mounts
+      watch:
+        # # Sync the working directory with the `/app` directory in the container
+        # - action: sync
+        #   path: .
+        #   target: /apps
+        #   # Exclude the project virtual environment — it could be for a
+        #   # different platform in the container
+        #   ignore:
+        #     - .venv/
+
+        # Rebuild the image on changes to the `pyproject.toml`
+        - action: rebuild
+          path: ./pyproject.toml
+        
+        - action: restart
+          path: ./.env
+
+  ollama:
+    image: ollama/ollama:0.5.8-rc1rocm
+    container_name: q-rag
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+volumes:
+  ollama:
+    external: false
