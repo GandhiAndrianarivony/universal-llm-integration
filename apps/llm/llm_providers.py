@@ -30,6 +30,7 @@ class HuggingFaceChatModel(BaseChatModel):
     def options(self):
         return [
             "mistralai/Mistral-7B-Instruct-v0.2",
+            "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
         ]
 
     @staticmethod
