@@ -1,7 +1,7 @@
 
 # Universal LLM integration
 
-A streamlit llm app that allow developer to test llm model different providers
+A streamlit llm app that allow developer to test various llm model from different providers
 
 
 ## Deployment
