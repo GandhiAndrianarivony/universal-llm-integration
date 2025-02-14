@@ -6,23 +6,25 @@ import pandas as pd
 import streamlit as st
 
 from llama_index.core import SimpleDirectoryReader
-from llm.query_engines import XLSXQueryEngine, WebsearchQueryEngine, BaseQE
+from llm.query_engines import (
+    XLSXQueryEngine,
+    WebsearchQueryEngine,
+    IQueryEngine,
+    ArxivQueryEngine,
+)
 
 
-class BaseChatUI(ABC):
-    chat_type = "Default"
-    _prompt = """"""
-
+class IChatUI(ABC):
     @abstractmethod
     def content(self):
         pass
 
     @property
-    def query_engine(self) -> BaseQE:
+    def query_engine(self) -> IQueryEngine:
         pass
 
 
-class XlsxChat(BaseChatUI):
+class XlsxChat(IChatUI):
     chat_type = "XLSX"
     _prompt = """
             Context information is below.\n
@@ -90,7 +92,7 @@ class XlsxChat(BaseChatUI):
         st.dataframe(df)
 
 
-class WebsearchChat(BaseChatUI):
+class WebsearchChat(IChatUI):
     chat_type = "Websearch"
     _prompt = """
         You are an assistant for web search task.
@@ -107,4 +109,37 @@ class WebsearchChat(BaseChatUI):
         return WebsearchQueryEngine(prompt=WebsearchChat._prompt)
 
 
-chats = [XlsxChat.chat_type, WebsearchChat.chat_type]
+class ArxivChat(IChatUI):
+    chat_type = "Arxiv"
+    _prompt = """
+        You are an AI assistant specialized in retrieving research articles from arXiv.  
+        Your task is to search for the most relevant articles based on a given user query and provide the following details for each result:  
+
+        - **Title**  
+        - **Authors**  
+        - **Publication Date**  
+        - **Abstract**  
+        - **PDF Link** (if available)  
+        - **Category** (e.g., Artificial Intelligence, Physics, Mathematics)  
+
+        Ensure that the results are **accurate, up-to-date, and sorted by relevance**.  
+        If no relevant articles are found, respond with: **'I DIDN'T FIND ANY RELEVANT ARTICLE'**.  
+
+        Maintain clarity and conciseness in the output while preserving essential details.  
+    """
+
+
+
+
+    def __init__(self):
+        super().__init__()
+
+    def content(self):
+        pass
+
+    @property
+    def query_engine(self):
+        return ArxivQueryEngine(prompt=ArxivChat._prompt)
+
+
+chats = [XlsxChat.chat_type, WebsearchChat.chat_type, ArxivChat.chat_type]

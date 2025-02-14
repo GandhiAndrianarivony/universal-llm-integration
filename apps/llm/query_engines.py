@@ -7,33 +7,58 @@ from llama_index.core import Settings
 from llama_index.core.agent import ReActAgent
 
 from llama_index.tools.duckduckgo import DuckDuckGoSearchToolSpec
+from llama_index.tools.arxiv import ArxivToolSpec
 
 
-class BaseQE(ABC):
+class IQueryEngine[T](ABC):
     @abstractmethod
-    def query(self, query: str, streaming: bool = False):
+    def query(self, query: str, streaming: bool = False) -> T:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def create_engine(*args, **kwargs):
         pass
 
 
-class XLSXQueryEngine(BaseQE):
+class ArxivQueryEngine(IQueryEngine):
+    def __init__(self, prompt: str):
+        self.prompt = prompt
+
+    def query(self, query: str, streaming: bool = False):
+        query_engine = ArxivQueryEngine.create_engine(context=self.prompt)
+        response = query_engine.query(query)
+        return response
+
+    @staticmethod
+    def create_engine(context: str):
+        tools = ArxivToolSpec().to_tool_list()
+
+        agent = ReActAgent.from_tools(
+            tools,
+            llm=Settings.llm,
+            verbose=True,
+            context=context,
+        )
+        return agent
+
+
+class XLSXQueryEngine(IQueryEngine):
     def __init__(self, docs: list, prompt: str):
         self.docs = docs
         self.prompt = prompt
 
     def query(self, query: str, streaming: bool = False):
-        query_engine = XLSXQueryEngine.create_xlsx_query_engine(
+        query_engine = XLSXQueryEngine.create_engine(
             _docs=self.docs,
             qa_prompt_tmpl_str=self.prompt,
             streaming=streaming,
         )
         response = query_engine.query(query)
-        return response.response
+        return response  # .response
 
     @staticmethod
-    # @st.cache_resource
-    def create_xlsx_query_engine(
-        _docs, qa_prompt_tmpl_str: str, streaming: bool = False
-    ):
+    def create_engine(_docs, qa_prompt_tmpl_str: str, streaming: bool = False):
         # CREATE INDEX
         node_parser = MarkdownNodeParser()
         index = VectorStoreIndex.from_documents(
@@ -52,21 +77,18 @@ class XLSXQueryEngine(BaseQE):
         return query_engine
 
 
-class WebsearchQueryEngine(BaseQE):
+class WebsearchQueryEngine(IQueryEngine):
     def __init__(self, prompt: str):
         self.prompt = prompt
 
     def query(self, query: str, streaming: bool = False):
-        query_engine = WebsearchQueryEngine.create_websearch_query_engine(
-            context=self.prompt
-        )
+        query_engine = WebsearchQueryEngine.create_engine(context=self.prompt)
 
         response = query_engine.query(query)
-        return response.response
-
+        return response  # .response
 
     @staticmethod
-    def create_websearch_query_engine(context: str):
+    def create_engine(context: str):
         tools = DuckDuckGoSearchToolSpec().to_tool_list()
 
         agent = ReActAgent.from_tools(

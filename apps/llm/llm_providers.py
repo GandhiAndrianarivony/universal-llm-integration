@@ -12,7 +12,7 @@ from llama_index.embeddings.ollama import OllamaEmbedding
 from .settings import hf_configs
 
 
-class BaseChatModel(ABC):
+class IChatModel(ABC):
     @property
     @abstractmethod
     def options(self):
@@ -23,14 +23,18 @@ class BaseChatModel(ABC):
         pass
 
 
-class HuggingFaceChatModel(BaseChatModel):
+class HuggingFaceChatModel(IChatModel):
     provider_name: str = "Hugging Face"
 
     @property
     def options(self):
         return [
             "mistralai/Mistral-7B-Instruct-v0.2",
-            "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+            # "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+            "meta-llama/Llama-3.2-3B-Instruct",
+            # "meta-llama/Llama-3.1-8B-Instruct",
+            # "Qwen/Qwen2.5-VL-7B-Instruct",
+            # "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
         ]
 
     @staticmethod
@@ -39,7 +43,7 @@ class HuggingFaceChatModel(BaseChatModel):
         llm = HuggingFaceInferenceAPI(
             token=hf_configs.HUGGINGFACE_API_KEY,
             model_name=option,
-            temperature=0.5,
+            # temperature=0,
             max_new_tokens=1000,
             **kwargs,
         )
@@ -50,12 +54,12 @@ class HuggingFaceChatModel(BaseChatModel):
         return HuggingFaceChatModel._load(option, **kwargs)
 
 
-class OllamaChatModel(BaseChatModel):
+class OllamaChatModel(IChatModel):
     provider_name: str = "ollama"
 
     @property
     def options(self):
-        return ["qwen2:latest"]
+        return ["llama3:latest"]
 
     def load(self, option: str):
         return OllamaChatModel._load(option)
